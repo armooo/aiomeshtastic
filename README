@@ -1,0 +1,8 @@
+aiomeshtastic -- asyncio bindings to the meshtastic device API.
+===============================================================
+
+Currenyly this can connect to devices over bluetooth, TCP, and serial. The
+allows you to loop over a device to get protobufs as they arrive and you can
+send protobufs back.
+
+See examples/tr.py for how it can be used.

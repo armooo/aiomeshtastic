@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aiomeshtastic"
+authors = [
+    {name = "Jason Michalski", email = "armooo@armooo.net"},
+]
+description = "asyncio bindings to the meshtastic device API."
+readme = "README"
+requires-python = ">=3.7"
+dependencies = [
+    "protobuf",
+    "pyserial-asyncio",
+    "bleak",
+]
+version = "1"
+
+[tool.setuptools]
+packages = [
+    "aiomeshtastic",
+    "meshtastic",
+
+]
