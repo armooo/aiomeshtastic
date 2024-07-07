@@ -21,4 +21,10 @@ class SerialConnection(stream_connection.Connection):
             url=path,
             baudrate=115200,
         )
-        return SerialConnection(reader, writer, path)
+        conn = SerialConnection(reader, writer, path)
+        conn.start_keepalive()
+        return conn
+
+    async def disconnect(self) -> None:
+        self.stop_keepalive()
+        await SerialConnection.disconnect(self)

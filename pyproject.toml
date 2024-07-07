@@ -15,7 +15,7 @@ dependencies = [
     "pyserial-asyncio",
     "bleak",
 ]
-version = "1"
+version = "2"
 
 [tool.setuptools]
 packages = [

@@ -21,4 +21,6 @@ class TCPConnection(stream_connection.Connection):
     @classmethod
     async def connect(self, host: str, port: int) -> "TCPConnection":
         reader, writer = await asyncio.open_connection(host, port)
-        return TCPConnection(reader, writer, host, port)
+        conn = TCPConnection(reader, writer, host, port)
+        conn.start_keepalive()
+        return conn
