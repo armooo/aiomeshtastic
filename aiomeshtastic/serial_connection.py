@@ -27,4 +27,4 @@ class SerialConnection(stream_connection.Connection):
 
     async def disconnect(self) -> None:
         self.stop_keepalive()
-        await SerialConnection.disconnect(self)
+        await stream_connection.Connection.disconnect(self)

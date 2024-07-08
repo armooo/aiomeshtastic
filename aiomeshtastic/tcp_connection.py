@@ -24,3 +24,7 @@ class TCPConnection(stream_connection.Connection):
         conn = TCPConnection(reader, writer, host, port)
         conn.start_keepalive()
         return conn
+
+    async def disconnect(self) -> None:
+        self.stop_keepalive()
+        await stream_connection.Connection.disconnect(self)
