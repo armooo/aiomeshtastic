@@ -24,7 +24,11 @@ class Connection:
     async def read(self) -> AsyncIterator[bytes]:
         assert self._reader
         while not self._stop:
-            await self._reader.readuntil(MAGIC)
+            try:
+                await self._reader.readuntil(MAGIC)
+            except asyncio.LimitOverrunError as err:
+                await self._reader.readexactly(err.consumed)
+                continue
             proto_len = int.from_bytes(await self._reader.readexactly(2), "big")
             yield await self._reader.readexactly(proto_len)
 
