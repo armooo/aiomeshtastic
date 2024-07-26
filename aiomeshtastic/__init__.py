@@ -13,7 +13,6 @@ from . import bt_connection
 
 async def connect(connetion_string: str) -> Connection:
     url = urlparse(connetion_string)
-    print(url)
     if url.scheme == "serial":
         return await SerialConnection.connect(url.path)
     elif url.scheme == "bt":

@@ -3,12 +3,14 @@ from types import TracebackType
 from typing import AsyncIterator, Type
 from bleak import BleakScanner, BleakClient
 from bleak.backends.device import BLEDevice
+from meshtastic.mesh_pb2 import LogRecord
 
 
 SERVICE = "6ba1b218-15a8-461f-9fa8-5dcae273eafd"
 FROM_RADIO = "2c55e69e-4993-11ed-b878-0242ac120002"
 TO_RADIO = "f75c76d2-129e-4dad-a1dd-7866124401e7"
 CURRENT_PACKET_NUM = "ed9da18c-a800-4f66-a670-aa7547e34453"
+LOGS = "5a3d6e49-06e6-4423-9944-e9de8cdf9547"
 
 
 class BTConnection:
@@ -43,6 +45,17 @@ class BTConnection:
 
     async def write(self, msg: bytes) -> None:
         await self._client.write_gatt_char(TO_RADIO, msg, response=False)
+
+    async def stream_logs(self) -> AsyncIterator[LogRecord]:
+        queue: asyncio.Queue[bytes] = asyncio.Queue()
+
+        def log_callback(_: object, data: bytearray) -> None:
+            queue.put_nowait(bytes(data))
+
+        await self._client.start_notify(LOGS, log_callback)
+        while True:
+            data = await queue.get()
+            yield LogRecord.FromString(data)
 
 
 async def find_first_device() -> BLEDevice:
