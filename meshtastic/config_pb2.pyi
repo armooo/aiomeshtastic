@@ -56,6 +56,7 @@ class Config(google.protobuf.message.Message):
             ROUTER_CLIENT: Config.DeviceConfig._Role.ValueType  # 3
             """
             Description: Combination of both ROUTER and CLIENT. Not for mobile devices.
+            Deprecated in v2.3.15 because improper usage is impacting public meshes: Use ROUTER or CLIENT instead.
             """
             REPEATER: Config.DeviceConfig._Role.ValueType  # 4
             """
@@ -131,6 +132,7 @@ class Config(google.protobuf.message.Message):
         ROUTER_CLIENT: Config.DeviceConfig.Role.ValueType  # 3
         """
         Description: Combination of both ROUTER and CLIENT. Not for mobile devices.
+        Deprecated in v2.3.15 because improper usage is impacting public meshes: Use ROUTER or CLIENT instead.
         """
         REPEATER: Config.DeviceConfig.Role.ValueType  # 4
         """
@@ -237,7 +239,6 @@ class Config(google.protobuf.message.Message):
 
         ROLE_FIELD_NUMBER: builtins.int
         SERIAL_ENABLED_FIELD_NUMBER: builtins.int
-        DEBUG_LOG_ENABLED_FIELD_NUMBER: builtins.int
         BUTTON_GPIO_FIELD_NUMBER: builtins.int
         BUZZER_GPIO_FIELD_NUMBER: builtins.int
         REBROADCAST_MODE_FIELD_NUMBER: builtins.int
@@ -245,6 +246,8 @@ class Config(google.protobuf.message.Message):
         DOUBLE_TAP_AS_BUTTON_PRESS_FIELD_NUMBER: builtins.int
         IS_MANAGED_FIELD_NUMBER: builtins.int
         DISABLE_TRIPLE_CLICK_FIELD_NUMBER: builtins.int
+        TZDEF_FIELD_NUMBER: builtins.int
+        LED_HEARTBEAT_DISABLED_FIELD_NUMBER: builtins.int
         role: global___Config.DeviceConfig.Role.ValueType
         """
         Sets the role of node
@@ -252,11 +255,7 @@ class Config(google.protobuf.message.Message):
         serial_enabled: builtins.bool
         """
         Disabling this will disable the SerialConsole by not initilizing the StreamAPI
-        """
-        debug_log_enabled: builtins.bool
-        """
-        By default we turn off logging as soon as an API client connects (to keep shared serial link quiet).
-        Set this to true to leave the debug log outputting even when API is active.
+        Moved to SecurityConfig
         """
         button_gpio: builtins.int
         """
@@ -285,17 +284,25 @@ class Config(google.protobuf.message.Message):
         """
         If true, device is considered to be "managed" by a mesh administrator
         Clients should then limit available configuration and administrative options inside the user interface
+        Moved to SecurityConfig
         """
         disable_triple_click: builtins.bool
         """
         Disables the triple-press of user button to enable or disable GPS
+        """
+        tzdef: builtins.str
+        """
+        POSIX Timezone definition string from https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv.
+        """
+        led_heartbeat_disabled: builtins.bool
+        """
+        If true, disable the default blinking LED (LED_PIN) behavior on the device
         """
         def __init__(
             self,
             *,
             role: global___Config.DeviceConfig.Role.ValueType = ...,
             serial_enabled: builtins.bool = ...,
-            debug_log_enabled: builtins.bool = ...,
             button_gpio: builtins.int = ...,
             buzzer_gpio: builtins.int = ...,
             rebroadcast_mode: global___Config.DeviceConfig.RebroadcastMode.ValueType = ...,
@@ -303,8 +310,10 @@ class Config(google.protobuf.message.Message):
             double_tap_as_button_press: builtins.bool = ...,
             is_managed: builtins.bool = ...,
             disable_triple_click: builtins.bool = ...,
+            tzdef: builtins.str = ...,
+            led_heartbeat_disabled: builtins.bool = ...,
         ) -> None: ...
-        def ClearField(self, field_name: typing.Literal["button_gpio", b"button_gpio", "buzzer_gpio", b"buzzer_gpio", "debug_log_enabled", b"debug_log_enabled", "disable_triple_click", b"disable_triple_click", "double_tap_as_button_press", b"double_tap_as_button_press", "is_managed", b"is_managed", "node_info_broadcast_secs", b"node_info_broadcast_secs", "rebroadcast_mode", b"rebroadcast_mode", "role", b"role", "serial_enabled", b"serial_enabled"]) -> None: ...
+        def ClearField(self, field_name: typing.Literal["button_gpio", b"button_gpio", "buzzer_gpio", b"buzzer_gpio", "disable_triple_click", b"disable_triple_click", "double_tap_as_button_press", b"double_tap_as_button_press", "is_managed", b"is_managed", "led_heartbeat_disabled", b"led_heartbeat_disabled", "node_info_broadcast_secs", b"node_info_broadcast_secs", "rebroadcast_mode", b"rebroadcast_mode", "role", b"role", "serial_enabled", b"serial_enabled", "tzdef", b"tzdef"]) -> None: ...
 
     @typing.final
     class PositionConfig(google.protobuf.message.Message):
@@ -568,29 +577,28 @@ class Config(google.protobuf.message.Message):
         LS_SECS_FIELD_NUMBER: builtins.int
         MIN_WAKE_SECS_FIELD_NUMBER: builtins.int
         DEVICE_BATTERY_INA_ADDRESS_FIELD_NUMBER: builtins.int
+        POWERMON_ENABLES_FIELD_NUMBER: builtins.int
         is_power_saving: builtins.bool
         """
-        If set, we are powered from a low-current source (i.e. solar), so even if it looks like we have power flowing in
-        we should try to minimize power consumption as much as possible.
-        YOU DO NOT NEED TO SET THIS IF YOU'VE set is_router (it is implied in that case).
-        Advanced Option
+        Description: Will sleep everything as much as possible, for the tracker and sensor role this will also include the lora radio. 
+        Don't use this setting if you want to use your device with the phone apps or are using a device without a user button.
+        Technical Details: Works for ESP32 devices and NRF52 devices in the Sensor or Tracker roles
         """
         on_battery_shutdown_after_secs: builtins.int
         """
-        If non-zero, the device will fully power off this many seconds after external power is removed.
+         Description: If non-zero, the device will fully power off this many seconds after external power is removed.
         """
         adc_multiplier_override: builtins.float
         """
         Ratio of voltage divider for battery pin eg. 3.20 (R1=100k, R2=220k)
         Overrides the ADC_MULTIPLIER defined in variant for battery voltage calculation.
-        Should be set to floating point value between 2 and 4
-        Fixes issues on Heltec v2
+        https://meshtastic.org/docs/configuration/radio/power/#adc-multiplier-override
+        Should be set to floating point value between 2 and 6
         """
         wait_bluetooth_secs: builtins.int
         """
-        Wait Bluetooth Seconds
-        The number of seconds for to wait before turning off BLE in No Bluetooth states
-        0 for default of 1 minute
+         Description: The number of seconds for to wait before turning off BLE in No Bluetooth states
+         Technical Details: ESP32 Only 0 for default of 1 minute
         """
         sds_secs: builtins.int
         """
@@ -601,20 +609,22 @@ class Config(google.protobuf.message.Message):
         """
         ls_secs: builtins.int
         """
-        Light Sleep Seconds
-        In light sleep the CPU is suspended, LoRa radio is on, BLE is off an GPS is on
-        ESP32 Only
-        0 for default of 300
+        Description: In light sleep the CPU is suspended, LoRa radio is on, BLE is off an GPS is on
+        Technical Details: ESP32 Only 0 for default of 300
         """
         min_wake_secs: builtins.int
         """
-        Minimum Wake Seconds
-        While in light sleep when we receive packets on the LoRa radio we will wake and handle them and stay awake in no BLE mode for this value
-        0 for default of 10 seconds
+        Description: While in light sleep when we receive packets on the LoRa radio we will wake and handle them and stay awake in no BLE mode for this value
+        Technical Details: ESP32 Only 0 for default of 10 seconds
         """
         device_battery_ina_address: builtins.int
         """
         I2C address of INA_2XX to use for reading device battery voltage
+        """
+        powermon_enables: builtins.int
+        """
+        If non-zero, we want powermon log outputs.  With the particular (bitfield) sources enabled.
+        Note: we picked an ID of 32 so that lower more efficient IDs can be used for more frequently used options.
         """
         def __init__(
             self,
@@ -627,8 +637,9 @@ class Config(google.protobuf.message.Message):
             ls_secs: builtins.int = ...,
             min_wake_secs: builtins.int = ...,
             device_battery_ina_address: builtins.int = ...,
+            powermon_enables: builtins.int = ...,
         ) -> None: ...
-        def ClearField(self, field_name: typing.Literal["adc_multiplier_override", b"adc_multiplier_override", "device_battery_ina_address", b"device_battery_ina_address", "is_power_saving", b"is_power_saving", "ls_secs", b"ls_secs", "min_wake_secs", b"min_wake_secs", "on_battery_shutdown_after_secs", b"on_battery_shutdown_after_secs", "sds_secs", b"sds_secs", "wait_bluetooth_secs", b"wait_bluetooth_secs"]) -> None: ...
+        def ClearField(self, field_name: typing.Literal["adc_multiplier_override", b"adc_multiplier_override", "device_battery_ina_address", b"device_battery_ina_address", "is_power_saving", b"is_power_saving", "ls_secs", b"ls_secs", "min_wake_secs", b"min_wake_secs", "on_battery_shutdown_after_secs", b"on_battery_shutdown_after_secs", "powermon_enables", b"powermon_enables", "sds_secs", b"sds_secs", "wait_bluetooth_secs", b"wait_bluetooth_secs"]) -> None: ...
 
     @typing.final
     class NetworkConfig(google.protobuf.message.Message):
@@ -953,6 +964,79 @@ class Config(google.protobuf.message.Message):
         TFT Full Color Displays (not implemented yet)
         """
 
+        class _CompassOrientation:
+            ValueType = typing.NewType("ValueType", builtins.int)
+            V: typing_extensions.TypeAlias = ValueType
+
+        class _CompassOrientationEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[Config.DisplayConfig._CompassOrientation.ValueType], builtins.type):
+            DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+            DEGREES_0: Config.DisplayConfig._CompassOrientation.ValueType  # 0
+            """
+            The compass and the display are in the same orientation.
+            """
+            DEGREES_90: Config.DisplayConfig._CompassOrientation.ValueType  # 1
+            """
+            Rotate the compass by 90 degrees.
+            """
+            DEGREES_180: Config.DisplayConfig._CompassOrientation.ValueType  # 2
+            """
+            Rotate the compass by 180 degrees.
+            """
+            DEGREES_270: Config.DisplayConfig._CompassOrientation.ValueType  # 3
+            """
+            Rotate the compass by 270 degrees.
+            """
+            DEGREES_0_INVERTED: Config.DisplayConfig._CompassOrientation.ValueType  # 4
+            """
+            Don't rotate the compass, but invert the result.
+            """
+            DEGREES_90_INVERTED: Config.DisplayConfig._CompassOrientation.ValueType  # 5
+            """
+            Rotate the compass by 90 degrees and invert.
+            """
+            DEGREES_180_INVERTED: Config.DisplayConfig._CompassOrientation.ValueType  # 6
+            """
+            Rotate the compass by 180 degrees and invert.
+            """
+            DEGREES_270_INVERTED: Config.DisplayConfig._CompassOrientation.ValueType  # 7
+            """
+            Rotate the compass by 270 degrees and invert.
+            """
+
+        class CompassOrientation(_CompassOrientation, metaclass=_CompassOrientationEnumTypeWrapper): ...
+        DEGREES_0: Config.DisplayConfig.CompassOrientation.ValueType  # 0
+        """
+        The compass and the display are in the same orientation.
+        """
+        DEGREES_90: Config.DisplayConfig.CompassOrientation.ValueType  # 1
+        """
+        Rotate the compass by 90 degrees.
+        """
+        DEGREES_180: Config.DisplayConfig.CompassOrientation.ValueType  # 2
+        """
+        Rotate the compass by 180 degrees.
+        """
+        DEGREES_270: Config.DisplayConfig.CompassOrientation.ValueType  # 3
+        """
+        Rotate the compass by 270 degrees.
+        """
+        DEGREES_0_INVERTED: Config.DisplayConfig.CompassOrientation.ValueType  # 4
+        """
+        Don't rotate the compass, but invert the result.
+        """
+        DEGREES_90_INVERTED: Config.DisplayConfig.CompassOrientation.ValueType  # 5
+        """
+        Rotate the compass by 90 degrees and invert.
+        """
+        DEGREES_180_INVERTED: Config.DisplayConfig.CompassOrientation.ValueType  # 6
+        """
+        Rotate the compass by 180 degrees and invert.
+        """
+        DEGREES_270_INVERTED: Config.DisplayConfig.CompassOrientation.ValueType  # 7
+        """
+        Rotate the compass by 270 degrees and invert.
+        """
+
         SCREEN_ON_SECS_FIELD_NUMBER: builtins.int
         GPS_FORMAT_FIELD_NUMBER: builtins.int
         AUTO_SCREEN_CAROUSEL_SECS_FIELD_NUMBER: builtins.int
@@ -963,6 +1047,7 @@ class Config(google.protobuf.message.Message):
         DISPLAYMODE_FIELD_NUMBER: builtins.int
         HEADING_BOLD_FIELD_NUMBER: builtins.int
         WAKE_ON_TAP_OR_MOTION_FIELD_NUMBER: builtins.int
+        COMPASS_ORIENTATION_FIELD_NUMBER: builtins.int
         screen_on_secs: builtins.int
         """
         Number of seconds the screen stays on after pressing the user button or receiving a message
@@ -1006,6 +1091,10 @@ class Config(google.protobuf.message.Message):
         """
         Should we wake the screen up on accelerometer detected motion or tap
         """
+        compass_orientation: global___Config.DisplayConfig.CompassOrientation.ValueType
+        """
+        Indicates how to rotate or invert the compass output to accurate display on the display.
+        """
         def __init__(
             self,
             *,
@@ -1019,8 +1108,9 @@ class Config(google.protobuf.message.Message):
             displaymode: global___Config.DisplayConfig.DisplayMode.ValueType = ...,
             heading_bold: builtins.bool = ...,
             wake_on_tap_or_motion: builtins.bool = ...,
+            compass_orientation: global___Config.DisplayConfig.CompassOrientation.ValueType = ...,
         ) -> None: ...
-        def ClearField(self, field_name: typing.Literal["auto_screen_carousel_secs", b"auto_screen_carousel_secs", "compass_north_top", b"compass_north_top", "displaymode", b"displaymode", "flip_screen", b"flip_screen", "gps_format", b"gps_format", "heading_bold", b"heading_bold", "oled", b"oled", "screen_on_secs", b"screen_on_secs", "units", b"units", "wake_on_tap_or_motion", b"wake_on_tap_or_motion"]) -> None: ...
+        def ClearField(self, field_name: typing.Literal["auto_screen_carousel_secs", b"auto_screen_carousel_secs", "compass_north_top", b"compass_north_top", "compass_orientation", b"compass_orientation", "displaymode", b"displaymode", "flip_screen", b"flip_screen", "gps_format", b"gps_format", "heading_bold", b"heading_bold", "oled", b"oled", "screen_on_secs", b"screen_on_secs", "units", b"units", "wake_on_tap_or_motion", b"wake_on_tap_or_motion"]) -> None: ...
 
     @typing.final
     class LoRaConfig(google.protobuf.message.Message):
@@ -1208,6 +1298,7 @@ class Config(google.protobuf.message.Message):
             VERY_LONG_SLOW: Config.LoRaConfig._ModemPreset.ValueType  # 2
             """
             Very Long Range - Slow
+            Deprecated in 2.5: Works only with txco and is unusably slow
             """
             MEDIUM_SLOW: Config.LoRaConfig._ModemPreset.ValueType  # 3
             """
@@ -1229,6 +1320,12 @@ class Config(google.protobuf.message.Message):
             """
             Long Range - Moderately Fast
             """
+            SHORT_TURBO: Config.LoRaConfig._ModemPreset.ValueType  # 8
+            """
+            Short Range - Turbo
+            This is the fastest preset and the only one with 500kHz bandwidth.
+            It is not legal to use in all regions due to this wider bandwidth.
+            """
 
         class ModemPreset(_ModemPreset, metaclass=_ModemPresetEnumTypeWrapper):
             """
@@ -1247,6 +1344,7 @@ class Config(google.protobuf.message.Message):
         VERY_LONG_SLOW: Config.LoRaConfig.ModemPreset.ValueType  # 2
         """
         Very Long Range - Slow
+        Deprecated in 2.5: Works only with txco and is unusably slow
         """
         MEDIUM_SLOW: Config.LoRaConfig.ModemPreset.ValueType  # 3
         """
@@ -1268,6 +1366,12 @@ class Config(google.protobuf.message.Message):
         """
         Long Range - Moderately Fast
         """
+        SHORT_TURBO: Config.LoRaConfig.ModemPreset.ValueType  # 8
+        """
+        Short Range - Turbo
+        This is the fastest preset and the only one with 500kHz bandwidth.
+        It is not legal to use in all regions due to this wider bandwidth.
+        """
 
         USE_PRESET_FIELD_NUMBER: builtins.int
         MODEM_PRESET_FIELD_NUMBER: builtins.int
@@ -1283,6 +1387,7 @@ class Config(google.protobuf.message.Message):
         OVERRIDE_DUTY_CYCLE_FIELD_NUMBER: builtins.int
         SX126X_RX_BOOSTED_GAIN_FIELD_NUMBER: builtins.int
         OVERRIDE_FREQUENCY_FIELD_NUMBER: builtins.int
+        PA_FAN_DISABLED_FIELD_NUMBER: builtins.int
         IGNORE_INCOMING_FIELD_NUMBER: builtins.int
         IGNORE_MQTT_FIELD_NUMBER: builtins.int
         use_preset: builtins.bool
@@ -1370,6 +1475,10 @@ class Config(google.protobuf.message.Message):
         Please respect your local laws and regulations. If you are a HAM, make sure you
         enable HAM mode and turn off encryption.
         """
+        pa_fan_disabled: builtins.bool
+        """
+        If true, disable the build-in PA FAN using pin define in RF95_FAN_EN.
+        """
         ignore_mqtt: builtins.bool
         """
         If true, the device will not process any packets received via LoRa that passed via MQTT anywhere on the path towards it.
@@ -1399,10 +1508,11 @@ class Config(google.protobuf.message.Message):
             override_duty_cycle: builtins.bool = ...,
             sx126x_rx_boosted_gain: builtins.bool = ...,
             override_frequency: builtins.float = ...,
+            pa_fan_disabled: builtins.bool = ...,
             ignore_incoming: collections.abc.Iterable[builtins.int] | None = ...,
             ignore_mqtt: builtins.bool = ...,
         ) -> None: ...
-        def ClearField(self, field_name: typing.Literal["bandwidth", b"bandwidth", "channel_num", b"channel_num", "coding_rate", b"coding_rate", "frequency_offset", b"frequency_offset", "hop_limit", b"hop_limit", "ignore_incoming", b"ignore_incoming", "ignore_mqtt", b"ignore_mqtt", "modem_preset", b"modem_preset", "override_duty_cycle", b"override_duty_cycle", "override_frequency", b"override_frequency", "region", b"region", "spread_factor", b"spread_factor", "sx126x_rx_boosted_gain", b"sx126x_rx_boosted_gain", "tx_enabled", b"tx_enabled", "tx_power", b"tx_power", "use_preset", b"use_preset"]) -> None: ...
+        def ClearField(self, field_name: typing.Literal["bandwidth", b"bandwidth", "channel_num", b"channel_num", "coding_rate", b"coding_rate", "frequency_offset", b"frequency_offset", "hop_limit", b"hop_limit", "ignore_incoming", b"ignore_incoming", "ignore_mqtt", b"ignore_mqtt", "modem_preset", b"modem_preset", "override_duty_cycle", b"override_duty_cycle", "override_frequency", b"override_frequency", "pa_fan_disabled", b"pa_fan_disabled", "region", b"region", "spread_factor", b"spread_factor", "sx126x_rx_boosted_gain", b"sx126x_rx_boosted_gain", "tx_enabled", b"tx_enabled", "tx_power", b"tx_power", "use_preset", b"use_preset"]) -> None: ...
 
     @typing.final
     class BluetoothConfig(google.protobuf.message.Message):
@@ -1465,6 +1575,74 @@ class Config(google.protobuf.message.Message):
         ) -> None: ...
         def ClearField(self, field_name: typing.Literal["enabled", b"enabled", "fixed_pin", b"fixed_pin", "mode", b"mode"]) -> None: ...
 
+    @typing.final
+    class SecurityConfig(google.protobuf.message.Message):
+        DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+        PUBLIC_KEY_FIELD_NUMBER: builtins.int
+        PRIVATE_KEY_FIELD_NUMBER: builtins.int
+        ADMIN_KEY_FIELD_NUMBER: builtins.int
+        IS_MANAGED_FIELD_NUMBER: builtins.int
+        SERIAL_ENABLED_FIELD_NUMBER: builtins.int
+        DEBUG_LOG_API_ENABLED_FIELD_NUMBER: builtins.int
+        ADMIN_CHANNEL_ENABLED_FIELD_NUMBER: builtins.int
+        public_key: builtins.bytes
+        """
+        The public key of the user's device.
+        Sent out to other nodes on the mesh to allow them to compute a shared secret key.
+        """
+        private_key: builtins.bytes
+        """
+        The private key of the device.
+        Used to create a shared key with a remote device.
+        """
+        admin_key: builtins.bytes
+        """
+        The public key authorized to send admin messages to this node.
+        """
+        is_managed: builtins.bool
+        """
+        If true, device is considered to be "managed" by a mesh administrator via admin messages
+        Device is managed by a mesh administrator.
+        """
+        serial_enabled: builtins.bool
+        """
+        Serial Console over the Stream API."
+        """
+        debug_log_api_enabled: builtins.bool
+        """
+        By default we turn off logging as soon as an API client connects (to keep shared serial link quiet).
+        Output live debug logging over serial or bluetooth is set to true.
+        """
+        admin_channel_enabled: builtins.bool
+        """
+        Allow incoming device control over the insecure legacy admin channel.
+        """
+        def __init__(
+            self,
+            *,
+            public_key: builtins.bytes = ...,
+            private_key: builtins.bytes = ...,
+            admin_key: builtins.bytes = ...,
+            is_managed: builtins.bool = ...,
+            serial_enabled: builtins.bool = ...,
+            debug_log_api_enabled: builtins.bool = ...,
+            admin_channel_enabled: builtins.bool = ...,
+        ) -> None: ...
+        def ClearField(self, field_name: typing.Literal["admin_channel_enabled", b"admin_channel_enabled", "admin_key", b"admin_key", "debug_log_api_enabled", b"debug_log_api_enabled", "is_managed", b"is_managed", "private_key", b"private_key", "public_key", b"public_key", "serial_enabled", b"serial_enabled"]) -> None: ...
+
+    @typing.final
+    class SessionkeyConfig(google.protobuf.message.Message):
+        """
+        Blank config request, strictly for getting the session key
+        """
+
+        DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+        def __init__(
+            self,
+        ) -> None: ...
+
     DEVICE_FIELD_NUMBER: builtins.int
     POSITION_FIELD_NUMBER: builtins.int
     POWER_FIELD_NUMBER: builtins.int
@@ -1472,6 +1650,8 @@ class Config(google.protobuf.message.Message):
     DISPLAY_FIELD_NUMBER: builtins.int
     LORA_FIELD_NUMBER: builtins.int
     BLUETOOTH_FIELD_NUMBER: builtins.int
+    SECURITY_FIELD_NUMBER: builtins.int
+    SESSIONKEY_FIELD_NUMBER: builtins.int
     @property
     def device(self) -> global___Config.DeviceConfig: ...
     @property
@@ -1486,6 +1666,10 @@ class Config(google.protobuf.message.Message):
     def lora(self) -> global___Config.LoRaConfig: ...
     @property
     def bluetooth(self) -> global___Config.BluetoothConfig: ...
+    @property
+    def security(self) -> global___Config.SecurityConfig: ...
+    @property
+    def sessionkey(self) -> global___Config.SessionkeyConfig: ...
     def __init__(
         self,
         *,
@@ -1496,9 +1680,11 @@ class Config(google.protobuf.message.Message):
         display: global___Config.DisplayConfig | None = ...,
         lora: global___Config.LoRaConfig | None = ...,
         bluetooth: global___Config.BluetoothConfig | None = ...,
+        security: global___Config.SecurityConfig | None = ...,
+        sessionkey: global___Config.SessionkeyConfig | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing.Literal["bluetooth", b"bluetooth", "device", b"device", "display", b"display", "lora", b"lora", "network", b"network", "payload_variant", b"payload_variant", "position", b"position", "power", b"power"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing.Literal["bluetooth", b"bluetooth", "device", b"device", "display", b"display", "lora", b"lora", "network", b"network", "payload_variant", b"payload_variant", "position", b"position", "power", b"power"]) -> None: ...
-    def WhichOneof(self, oneof_group: typing.Literal["payload_variant", b"payload_variant"]) -> typing.Literal["device", "position", "power", "network", "display", "lora", "bluetooth"] | None: ...
+    def HasField(self, field_name: typing.Literal["bluetooth", b"bluetooth", "device", b"device", "display", b"display", "lora", b"lora", "network", b"network", "payload_variant", b"payload_variant", "position", b"position", "power", b"power", "security", b"security", "sessionkey", b"sessionkey"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing.Literal["bluetooth", b"bluetooth", "device", b"device", "display", b"display", "lora", b"lora", "network", b"network", "payload_variant", b"payload_variant", "position", b"position", "power", b"power", "security", b"security", "sessionkey", b"sessionkey"]) -> None: ...
+    def WhichOneof(self, oneof_group: typing.Literal["payload_variant", b"payload_variant"]) -> typing.Literal["device", "position", "power", "network", "display", "lora", "bluetooth", "security", "sessionkey"] | None: ...
 
 global___Config = Config

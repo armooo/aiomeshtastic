@@ -408,6 +408,8 @@ class ModuleConfig(google.protobuf.message.Message):
 
         ENABLED_FIELD_NUMBER: builtins.int
         PAXCOUNTER_UPDATE_INTERVAL_FIELD_NUMBER: builtins.int
+        WIFI_THRESHOLD_FIELD_NUMBER: builtins.int
+        BLE_THRESHOLD_FIELD_NUMBER: builtins.int
         enabled: builtins.bool
         """
         Enable the Paxcounter Module
@@ -417,13 +419,23 @@ class ModuleConfig(google.protobuf.message.Message):
         Interval in seconds of how often we should try to send our
         metrics to the mesh
         """
+        wifi_threshold: builtins.int
+        """
+        WiFi RSSI threshold. Defaults to -80
+        """
+        ble_threshold: builtins.int
+        """
+        BLE RSSI threshold. Defaults to -80
+        """
         def __init__(
             self,
             *,
             enabled: builtins.bool = ...,
             paxcounter_update_interval: builtins.int = ...,
+            wifi_threshold: builtins.int = ...,
+            ble_threshold: builtins.int = ...,
         ) -> None: ...
-        def ClearField(self, field_name: typing.Literal["enabled", b"enabled", "paxcounter_update_interval", b"paxcounter_update_interval"]) -> None: ...
+        def ClearField(self, field_name: typing.Literal["ble_threshold", b"ble_threshold", "enabled", b"enabled", "paxcounter_update_interval", b"paxcounter_update_interval", "wifi_threshold", b"wifi_threshold"]) -> None: ...
 
     @typing.final
     class SerialConfig(google.protobuf.message.Message):
@@ -491,6 +503,8 @@ class ModuleConfig(google.protobuf.message.Message):
             NMEA: ModuleConfig.SerialConfig._Serial_Mode.ValueType  # 4
             CALTOPO: ModuleConfig.SerialConfig._Serial_Mode.ValueType  # 5
             """NMEA messages specifically tailored for CalTopo"""
+            WS85: ModuleConfig.SerialConfig._Serial_Mode.ValueType  # 6
+            """Ecowitt WS85 weather station"""
 
         class Serial_Mode(_Serial_Mode, metaclass=_Serial_ModeEnumTypeWrapper):
             """
@@ -504,6 +518,8 @@ class ModuleConfig(google.protobuf.message.Message):
         NMEA: ModuleConfig.SerialConfig.Serial_Mode.ValueType  # 4
         CALTOPO: ModuleConfig.SerialConfig.Serial_Mode.ValueType  # 5
         """NMEA messages specifically tailored for CalTopo"""
+        WS85: ModuleConfig.SerialConfig.Serial_Mode.ValueType  # 6
+        """Ecowitt WS85 weather station"""
 
         ENABLED_FIELD_NUMBER: builtins.int
         ECHO_FIELD_NUMBER: builtins.int
@@ -689,6 +705,7 @@ class ModuleConfig(google.protobuf.message.Message):
         RECORDS_FIELD_NUMBER: builtins.int
         HISTORY_RETURN_MAX_FIELD_NUMBER: builtins.int
         HISTORY_RETURN_WINDOW_FIELD_NUMBER: builtins.int
+        IS_SERVER_FIELD_NUMBER: builtins.int
         enabled: builtins.bool
         """
         Enable the Store and Forward Module
@@ -709,6 +726,10 @@ class ModuleConfig(google.protobuf.message.Message):
         """
         TODO: REPLACE
         """
+        is_server: builtins.bool
+        """
+        Set to true to let this node act as a server that stores received messages and resends them upon request.
+        """
         def __init__(
             self,
             *,
@@ -717,8 +738,9 @@ class ModuleConfig(google.protobuf.message.Message):
             records: builtins.int = ...,
             history_return_max: builtins.int = ...,
             history_return_window: builtins.int = ...,
+            is_server: builtins.bool = ...,
         ) -> None: ...
-        def ClearField(self, field_name: typing.Literal["enabled", b"enabled", "heartbeat", b"heartbeat", "history_return_max", b"history_return_max", "history_return_window", b"history_return_window", "records", b"records"]) -> None: ...
+        def ClearField(self, field_name: typing.Literal["enabled", b"enabled", "heartbeat", b"heartbeat", "history_return_max", b"history_return_max", "history_return_window", b"history_return_window", "is_server", b"is_server", "records", b"records"]) -> None: ...
 
     @typing.final
     class RangeTestConfig(google.protobuf.message.Message):
@@ -970,7 +992,7 @@ class ModuleConfig(google.protobuf.message.Message):
         allow_input_source: builtins.str
         """
         Input event origin accepted by the canned message module.
-        Can be e.g. "rotEnc1", "upDownEnc1" or keyword "_any"
+        Can be e.g. "rotEnc1", "upDownEnc1", "scanAndSelect", "cardkb", "serialkb", or keyword "_any"
         """
         send_bell: builtins.bool
         """
